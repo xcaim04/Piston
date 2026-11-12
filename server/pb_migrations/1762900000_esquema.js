@@ -2,21 +2,34 @@
 
 // Esquema del taller "El Pistón". Ver web/PLAN.md.
 // Roles: recepcion (todo) y mecanico (lee todo, edita sus órdenes).
+//
+// Dos fases: primero se crean colecciones con sus campos, y después se aplican
+// las reglas. Las reglas con relaciones (orden.mecanico) fallan si se validan
+// antes de que el campo relación exista guardado.
 
 const SESION = "@request.auth.id != ''";
 const RECEPCION = "@request.auth.rol = 'recepcion'";
 const MECANICO = "@request.auth.rol = 'mecanico'";
 
 migrate((app) => {
+  // En PocketBase 0.40 los campos pasados en el constructor se descartan:
+  // hay que añadirlos con fields.add(). save() no devuelve el registro, así que
+  // se guarda el mismo objeto y se usa.
+  const crear = ({ fields, ...definicion }) => {
+    const coleccion = new Collection(definicion);
+    for (const campo of fields) coleccion.fields.add(campo);
+    app.save(coleccion);
+    return coleccion;
+  };
+
   // Usuarios: añadir nombre y rol al auth collection incluido.
   const users = app.findCollectionByNameOrId("users");
   users.fields.add(new TextField({ name: "nombre", required: false }));
   users.fields.add(new SelectField({ name: "rol", values: ["recepcion", "mecanico"], maxSelect: 1, required: false }));
-  users.listRule = SESION;
-  users.viewRule = SESION;
   app.save(users);
 
-  const clientes = new Collection({
+  // Fase 1: colecciones y campos.
+  const clientes = crear({
     type: "base",
     name: "clientes",
     fields: [
@@ -24,15 +37,9 @@ migrate((app) => {
       new TextField({ name: "telefono", required: true }),
       new TextField({ name: "direccion" }),
     ],
-    listRule: SESION,
-    viewRule: SESION,
-    createRule: `${RECEPCION}`,
-    updateRule: `${RECEPCION}`,
-    deleteRule: `${RECEPCION}`,
   });
-  app.save(clientes);
 
-  const vehiculos = new Collection({
+  const vehiculos = crear({
     type: "base",
     name: "vehiculos",
     fields: [
@@ -44,15 +51,9 @@ migrate((app) => {
       new NumberField({ name: "km", onlyInt: true, min: 0 }),
     ],
     indexes: ["CREATE UNIQUE INDEX idx_vehiculos_matricula ON vehiculos (matricula)"],
-    listRule: SESION,
-    viewRule: SESION,
-    createRule: `${RECEPCION}`,
-    updateRule: `${RECEPCION}`,
-    deleteRule: `${RECEPCION}`,
   });
-  app.save(vehiculos);
 
-  const repuestos = new Collection({
+  const repuestos = crear({
     type: "base",
     name: "repuestos",
     fields: [
@@ -63,15 +64,9 @@ migrate((app) => {
       new NumberField({ name: "minimo", onlyInt: true, min: 0 }),
     ],
     indexes: ["CREATE UNIQUE INDEX idx_repuestos_codigo ON repuestos (codigo)"],
-    listRule: SESION,
-    viewRule: SESION,
-    createRule: `${RECEPCION}`,
-    updateRule: `${RECEPCION}`,
-    deleteRule: `${RECEPCION}`,
   });
-  app.save(repuestos);
 
-  const ordenes = new Collection({
+  const ordenes = crear({
     type: "base",
     name: "ordenes",
     fields: [
@@ -88,15 +83,9 @@ migrate((app) => {
         values: ["recibida", "en_diagnostico", "en_reparacion", "lista", "entregada", "cancelada"],
       }),
     ],
-    listRule: SESION,
-    viewRule: SESION,
-    createRule: `${RECEPCION}`,
-    updateRule: `${RECEPCION} || (${MECANICO} && mecanico = @request.auth.id)`,
-    deleteRule: null,
   });
-  app.save(ordenes);
 
-  const trabajos = new Collection({
+  const trabajos = crear({
     type: "base",
     name: "trabajos",
     fields: [
@@ -104,15 +93,9 @@ migrate((app) => {
       new TextField({ name: "descripcion", required: true }),
       new NumberField({ name: "mano_obra", required: true, min: 0 }),
     ],
-    listRule: SESION,
-    viewRule: SESION,
-    createRule: `${RECEPCION} || (${MECANICO} && orden.mecanico = @request.auth.id)`,
-    updateRule: `${RECEPCION} || (${MECANICO} && orden.mecanico = @request.auth.id)`,
-    deleteRule: `${RECEPCION}`,
   });
-  app.save(trabajos);
 
-  const ordenRepuestos = new Collection({
+  const ordenRepuestos = crear({
     type: "base",
     name: "orden_repuestos",
     fields: [
@@ -121,15 +104,9 @@ migrate((app) => {
       new NumberField({ name: "cantidad", required: true, onlyInt: true, min: 1 }),
       new NumberField({ name: "precio_unit", required: true, min: 0 }),
     ],
-    listRule: SESION,
-    viewRule: SESION,
-    createRule: `${RECEPCION} || (${MECANICO} && orden.mecanico = @request.auth.id)`,
-    updateRule: null,
-    deleteRule: `${RECEPCION} || (${MECANICO} && orden.mecanico = @request.auth.id)`,
   });
-  app.save(ordenRepuestos);
 
-  const pagos = new Collection({
+  const pagos = crear({
     type: "base",
     name: "pagos",
     fields: [
@@ -138,13 +115,45 @@ migrate((app) => {
       new DateField({ name: "fecha", required: true }),
       new SelectField({ name: "metodo", maxSelect: 1, values: ["efectivo", "tarjeta", "transferencia"] }),
     ],
-    listRule: SESION,
-    viewRule: SESION,
-    createRule: `${RECEPCION}`,
-    updateRule: null,
-    deleteRule: `${RECEPCION}`,
   });
-  app.save(pagos);
+
+  // Fase 2: reglas de acceso. Cada colección se recarga desde la base antes de
+  // asignarle reglas, para validarlas contra los campos ya guardados.
+  const lectura = { listRule: SESION, viewRule: SESION };
+  const soloRecepcion = { createRule: RECEPCION, updateRule: RECEPCION, deleteRule: RECEPCION };
+  const duenoDeOrden = `${MECANICO} && orden.mecanico = @request.auth.id`;
+
+  const reglas = {
+    users: lectura,
+    clientes: { ...lectura, ...soloRecepcion },
+    vehiculos: { ...lectura, ...soloRecepcion },
+    repuestos: { ...lectura, ...soloRecepcion },
+    ordenes: {
+      ...lectura,
+      createRule: RECEPCION,
+      updateRule: `${RECEPCION} || (${MECANICO} && mecanico = @request.auth.id)`,
+      deleteRule: null,
+    },
+    trabajos: {
+      ...lectura,
+      createRule: `${RECEPCION} || (${duenoDeOrden})`,
+      updateRule: `${RECEPCION} || (${duenoDeOrden})`,
+      deleteRule: RECEPCION,
+    },
+    orden_repuestos: {
+      ...lectura,
+      createRule: `${RECEPCION} || (${duenoDeOrden})`,
+      updateRule: null,
+      deleteRule: `${RECEPCION} || (${duenoDeOrden})`,
+    },
+    pagos: { ...lectura, createRule: RECEPCION, updateRule: null, deleteRule: RECEPCION },
+  };
+
+  for (const [nombre, regla] of Object.entries(reglas)) {
+    const coleccion = app.findCollectionByNameOrId(nombre);
+    Object.assign(coleccion, regla);
+    app.save(coleccion);
+  }
 }, (app) => {
   for (const nombre of ["pagos", "orden_repuestos", "trabajos", "ordenes", "repuestos", "vehiculos", "clientes"]) {
     app.delete(app.findCollectionByNameOrId(nombre));
