@@ -72,5 +72,18 @@ salir.addEventListener("click", () => {
   pb.authStore.clear();
   irA("#/inicio");
 });
+// Al cargar, la sesión guardada se valida en el servidor: si el usuario ya no existe
+// o su sesión caducó, se cierra y se muestra el login (si no, todas las consultas fallan con 404).
+async function iniciar() {
+  if (pb.authStore.isValid) {
+    try {
+      await pb.collection("users").authRefresh();
+    } catch {
+      pb.authStore.clear();
+    }
+  }
+  ruta();
+}
+
 window.addEventListener("hashchange", ruta);
-ruta();
+iniciar();
