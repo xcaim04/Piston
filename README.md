@@ -19,6 +19,26 @@ Diseño completo y fases en [`PLAN.md`](PLAN.md).
 - **Kilometraje.** Al crear una orden se guarda el kilometraje de entrada en la orden y en el vehículo.
 - **Sin modo sin conexión.** Eso corresponde a la versión móvil.
 
+## Capturas
+
+Tomadas con los datos de ejemplo, sesión de recepción.
+
+| Inicio | Órdenes |
+|---|---|
+| ![Inicio: órdenes por estado, carga por mecánico y repuestos por agotarse](capturas/01-inicio.png) | ![Lista de órdenes con filtros por estado y mecánico](capturas/04-ordenes.png) |
+| **Detalle de orden** | **Ficha de cliente** |
+| ![Detalle de orden con trabajos, repuestos, pagos y saldo](capturas/06-orden-detalle.png) | ![Ficha de cliente con vehículos e historial](capturas/03-cliente-ficha.png) |
+| **Inventario** | **Reportes** |
+| ![Inventario con alerta de existencias bajas](capturas/07-inventario.png) | ![Facturación por período y saldos pendientes](capturas/08-reportes.png) |
+
+En el teléfono:
+
+| Inicio | Detalle de orden |
+|---|---|
+| <img src="capturas/09-movil-inicio.png" alt="Inicio en el teléfono" width="260"> | <img src="capturas/10-movil-orden.png" alt="Detalle de orden en el teléfono" width="260"> |
+
+Más capturas en [`capturas/`](capturas/): inicio de sesión, lista de clientes y nueva orden.
+
 ## Cómo ejecutar
 
 ### Servidor
