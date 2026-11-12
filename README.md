@@ -57,5 +57,5 @@ Crea datos de prueba en la base de desarrollo. Comprueba reglas por rol, el prec
 ## Estado
 
 - Servidor: esquema y reglas aplicados sin error con PocketBase 0.40.6; la prueba de humo pasa las 19 comprobaciones.
-- Cliente: escrito, con sintaxis verificada, pero **no probado en el navegador**. Falta recorrer las pantallas con datos reales.
-- Las capturas de `capturas/` quedan pendientes hasta recorrer la aplicación.
+- Cliente: todas las pantallas recorridas en Chrome con datos de ejemplo; capturas en [`capturas/`](capturas/).
+- No se probó todavía con el rol `mecanico` desde la interfaz (sí desde la API, en la prueba de humo).
