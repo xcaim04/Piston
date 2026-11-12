@@ -5,17 +5,18 @@ Entrega original: viernes 6 de noviembre de 2026, 23:59 (ya vencida; confirmar c
 ## Estructura
 
 ```
-El Piston/
-├── web/
-│   ├── PLAN.md
-│   ├── README.md              (decisiones de diseño + cómo ejecutar)
-│   ├── capturas/              (capturas de la app en uso)
-│   ├── server/                (PocketBase)
-│   │   ├── pb_migrations/     (colecciones, relaciones, reglas)
-│   │   └── pb_hooks/          (control de existencias)
-│   └── client/                (HTML + CSS + JS, SDK pocketbase)
-└── movil/                     (Flutter, versión posterior)
+Piston/                    (este repositorio: versión web)
+├── PLAN.md
+├── README.md              (decisiones de diseño + cómo ejecutar)
+├── capturas/              (capturas de la app en uso)
+├── server/                (PocketBase)
+│   ├── pb_migrations/     (colecciones, relaciones, reglas)
+│   ├── pb_hooks/          (control de existencias)
+│   └── pruebas/           (prueba de humo de la API)
+└── client/                (HTML + CSS + JS, SDK pocketbase)
 ```
+
+La versión móvil (Flutter + Drift) va en su propio repositorio, `Drift`.
 
 ## Fases
 
