@@ -22,6 +22,11 @@ export const fecha = (s) => (s ? s.slice(0, 10) : "—");
 
 export const nombreUsuario = (u) => (u ? u.nombre || u.email : "Sin asignar");
 
+// Etiqueta de color para el estado de una orden (colores en css/style.css).
+export const chipEstado = (e) => `<span class="chip chip-${esc(e)}">${esc(ESTADOS[e] || e)}</span>`;
+
+export const km = (n) => (n || n === 0 ? Number(n).toLocaleString("es") : "—");
+
 export function errorTexto(err) {
   const datos = err?.response?.data;
   const primero = datos && Object.values(datos)[0];

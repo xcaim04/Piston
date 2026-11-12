@@ -1,5 +1,5 @@
 import { pb } from "../pb.js";
-import { esc, errorTexto, fecha, aviso, hoy, dinero, nombreUsuario, ESTADOS, METODOS } from "../util.js";
+import { esc, errorTexto, fecha, aviso, hoy, dinero, nombreUsuario, chipEstado, km, ESTADOS, METODOS } from "../util.js";
 
 // Órdenes: lista con filtros, alta, y detalle con trabajos, repuestos, pagos y saldo.
 export async function render(main, id) {
@@ -31,9 +31,9 @@ async function lista(main) {
   ]);
 
   main.innerHTML = `
-    <div class="linea" style="justify-content:space-between">
+    <div class="cabecera">
       <h1>Órdenes</h1>
-      <a class="enlace" href="#/ordenes/nueva"><button type="button">Nueva orden</button></a>
+      <a class="boton" href="#/ordenes/nueva">+ Nueva orden</a>
     </div>
     <form id="filtros" class="linea">
       <label>Estado
@@ -58,7 +58,7 @@ async function lista(main) {
           <td><a class="enlace" href="#/ordenes/${o.id}">${esc(o.expand?.vehiculo?.matricula)}</a></td>
           <td>${esc(o.expand?.vehiculo?.expand?.cliente?.nombre)}</td>
           <td>${esc(nombreUsuario(o.expand?.mecanico))}</td>
-          <td>${esc(ESTADOS[o.estado])}</td>
+          <td>${chipEstado(o.estado)}</td>
         </tr>`).join("") || `<tr><td colspan="5" class="nota">Sin órdenes con ese filtro.</td></tr>`}
       </tbody>
     </table></div>`;
@@ -150,8 +150,11 @@ async function detalle(main, id) {
 
   main.innerHTML = `
     <p><a class="enlace" href="#/ordenes">← Órdenes</a></p>
-    <h1>Orden ${esc(v?.matricula)} — ${esc(v?.marca)} ${esc(v?.modelo)}</h1>
-    <p class="nota">Cliente: ${esc(v?.expand?.cliente?.nombre)} · Mecánico: ${esc(nombreUsuario(orden.expand?.mecanico))} · Entrada: ${fecha(orden.fecha_entrada)}${orden.km_entrada ? ` · Km: ${orden.km_entrada}` : ""}</p>
+    <div class="cabecera">
+      <h1>Orden ${esc(v?.matricula)} — ${esc(v?.marca)} ${esc(v?.modelo)}</h1>
+      ${chipEstado(orden.estado)}
+    </div>
+    <p class="nota">Cliente: <a class="enlace" href="#/clientes/${esc(v?.cliente)}">${esc(v?.expand?.cliente?.nombre)}</a> · Mecánico: ${esc(nombreUsuario(orden.expand?.mecanico))} · Entrada: ${fecha(orden.fecha_entrada)}${orden.km_entrada ? ` · Km: ${km(orden.km_entrada)}` : ""}</p>
     <p><strong>Problema:</strong> ${esc(orden.problema)}</p>
 
     <section class="panel">

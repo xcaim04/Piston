@@ -1,5 +1,5 @@
 import { pb } from "../pb.js";
-import { esc, ESTADOS, ESTADOS_ABIERTOS, fecha, nombreUsuario } from "../util.js";
+import { esc, ESTADOS, ESTADOS_ABIERTOS, fecha, nombreUsuario, chipEstado } from "../util.js";
 
 // Pantalla de inicio: órdenes abiertas, carga por mecánico y repuestos por agotarse.
 export async function render(main) {
@@ -21,16 +21,28 @@ export async function render(main) {
 
   main.innerHTML = `
     <h1>Inicio</h1>
-    <div class="grid dos">
-      <section class="panel">
-        <h2>Órdenes abiertas: ${abiertas.length}</h2>
-        <ul>${porEstado.map((x) => `<li>${esc(ESTADOS[x.e])}: <strong>${x.n}</strong></li>`).join("")}</ul>
-      </section>
+    <p class="nota">${abiertas.length} orden(es) abiertas. Toca un estado para ver sus órdenes.</p>
+    <div class="tiles">
+      ${porEstado.map((x) => `
+        <a class="tile tile-${x.e}" href="#/ordenes?estado=${x.e}">
+          <span class="tile-n">${x.n}</span>
+          <span>${esc(ESTADOS[x.e])}</span>
+        </a>`).join("")}
+    </div>
+
+    <div class="grid dos" style="margin-top:16px">
       <section class="panel">
         <h2>Trabajo por mecánico</h2>
         ${porMecanico.size
-          ? `<ul>${[...porMecanico].map(([n, c]) => `<li>${esc(n)}: <strong>${c}</strong> orden(es)</li>`).join("")}</ul>`
+          ? `<ul class="lista">${[...porMecanico].map(([n, c]) => `<li><span>${esc(n)}</span><strong>${c}</strong></li>`).join("")}</ul>`
           : `<p class="nota">No hay órdenes abiertas.</p>`}
+      </section>
+      <section class="panel ${bajos.length ? "panel-alerta" : ""}">
+        <h2>Repuestos por agotarse</h2>
+        ${bajos.length
+          ? `<ul class="lista">${bajos.map((r) => `<li><span>${esc(r.nombre)} <span class="nota">${esc(r.codigo)}</span></span><strong class="bajo">${r.existencias} / mín. ${r.minimo}</strong></li>`).join("")}</ul>
+             <p><a class="enlace" href="#/inventario">Ir al inventario</a></p>`
+          : `<p class="nota">Todo el inventario está por encima del mínimo.</p>`}
       </section>
     </div>
 
@@ -43,13 +55,9 @@ export async function render(main) {
           <td><a class="enlace" href="#/ordenes/${o.id}">${esc(o.expand?.vehiculo?.matricula)}</a></td>
           <td>${esc(o.expand?.vehiculo?.expand?.cliente?.nombre)}</td>
           <td>${esc(nombreUsuario(o.expand?.mecanico))}</td>
-          <td>${esc(ESTADOS[o.estado])}</td>
+          <td>${chipEstado(o.estado)}</td>
         </tr>`).join("") || `<tr><td colspan="5" class="nota">Sin órdenes abiertas.</td></tr>`}
       </tbody>
     </table></div>
-
-    <h2>Repuestos por agotarse</h2>
-    <ul>${bajos.map((r) => `<li class="bajo">${esc(r.nombre)} (${esc(r.codigo)}): ${r.existencias} en existencia, mínimo ${r.minimo}</li>`).join("")
-      || `<li class="nota">Todo el inventario está por encima del mínimo.</li>`}</ul>
   `;
 }

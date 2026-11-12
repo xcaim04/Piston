@@ -1,5 +1,5 @@
 import { pb } from "../pb.js";
-import { esc, errorTexto, fecha, aviso, ESTADOS } from "../util.js";
+import { esc, errorTexto, fecha, aviso, chipEstado, km } from "../util.js";
 
 // Clientes: lista con búsqueda y alta; ficha con datos, vehículos e historial.
 export async function render(main, id) {
@@ -93,7 +93,7 @@ async function ficha(main, id) {
           <td>${esc(v.matricula)}</td>
           <td>${esc(v.marca)} ${esc(v.modelo)}</td>
           <td>${esc(v.anio)}</td>
-          <td class="num">${esc(v.km)}</td>
+          <td class="num">${km(v.km)}</td>
         </tr>`).join("") || `<tr><td colspan="4" class="nota">Sin vehículos registrados.</td></tr>`}
       </tbody>
     </table></div>
@@ -119,7 +119,7 @@ async function ficha(main, id) {
           <td>${fecha(o.fecha_entrada)}</td>
           <td><a class="enlace" href="#/ordenes/${o.id}">${esc(o.expand?.vehiculo?.matricula)}</a></td>
           <td>${esc(o.problema)}</td>
-          <td>${esc(ESTADOS[o.estado])}</td>
+          <td>${chipEstado(o.estado)}</td>
         </tr>`).join("") || `<tr><td colspan="4" class="nota">Sin servicios todavía.</td></tr>`}
       </tbody>
     </table></div>`;
