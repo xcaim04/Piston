@@ -43,8 +43,19 @@ python3 -m http.server 8080
 
 Abrir <http://127.0.0.1:8080>. Si el servidor no está en `http://127.0.0.1:8090`, cambiar la URL en `js/pb.js`.
 
+### Prueba de humo del servidor
+
+Con el servidor corriendo y un superusuario creado (`./pocketbase superuser upsert EMAIL PASS`):
+
+```
+cd server
+PB_SU_EMAIL=EMAIL PB_SU_PASS=PASS node pruebas/smoke.mjs
+```
+
+Crea datos de prueba en la base de desarrollo. Comprueba reglas por rol, el precio fijado en el servidor y el descuento y devolución de existencias.
+
 ## Estado
 
-- Esquema, reglas, hook de existencias y las seis pantallas están escritos.
-- **No probados contra un servidor en ejecución.** La descarga del binario de PocketBase no se completó en el entorno de desarrollo; solo se verificó la sintaxis de los archivos JavaScript.
-- Las capturas de `capturas/` quedan pendientes hasta poder ejecutar la aplicación.
+- Servidor: esquema y reglas aplicados sin error con PocketBase 0.40.6; la prueba de humo pasa las 19 comprobaciones.
+- Cliente: escrito, con sintaxis verificada, pero **no probado en el navegador**. Falta recorrer las pantallas con datos reales.
+- Las capturas de `capturas/` quedan pendientes hasta recorrer la aplicación.
