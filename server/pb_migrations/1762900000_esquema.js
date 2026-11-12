@@ -15,9 +15,12 @@ migrate((app) => {
   // En PocketBase 0.40 los campos pasados en el constructor se descartan:
   // hay que añadirlos con fields.add(). save() no devuelve el registro, así que
   // se guarda el mismo objeto y se usa.
+  // created/updated: sin ellos, ordenar por "created" da error 400 en las consultas.
   const crear = ({ fields, ...definicion }) => {
     const coleccion = new Collection(definicion);
     for (const campo of fields) coleccion.fields.add(campo);
+    coleccion.fields.add(new AutodateField({ name: "created", onCreate: true }));
+    coleccion.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
     app.save(coleccion);
     return coleccion;
   };
